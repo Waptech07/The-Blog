@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container justify-center items-center w-full">
+    <div>
+      <img src="{{ post.img.url }}" alt="{{ post.title }}" />
+    </div>
+    <h1>{{ post.title }}</h1>
+    <p>Published on: {{ post.date }}</p>
+    <h2>{{ post.subheading }}</h2>
+    <p>{{ post.content|safe|linebreaks }}</p>
+
+    <!-- You can add more details of the post here based on your Post model fields -->
+
+    <!-- Link to go back to the list of all posts -->
+    <a href="/" class="px-3 py-2 mt-6 items-center text-center bg-blue-400 text-white hover:bg-blue-600"><i class="fas fa-arrow-left mx-1"></i>Back to all posts</a>
+  </div>
+{% endblock %}

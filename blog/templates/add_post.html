@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h1 class="mt-5 text-center">Login</h1>
+
+  <div class="container border border-dark mt-4 p-5" id="form-container">
+    <form action="{% url 'add_post' %}" method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label><b>Title :</b></label>
+        <input type="text" name="title" class="form-control" name="title" placeholder="Title" />
+      </div>
+      <br />
+      <div class="form-group">
+        <label><b>Categories :</b></label>
+        <select name="category" class="form-control">
+          <option value="category">Technology</option>
+          <option value="Business">Business</option>
+          <option value="Politics">Politics</option>
+        </select>
+      </div>
+      <br />
+      <div class="form-group">
+        <label><b>Image</b></label>
+        <input type="file" name="image" class="form-control" placeholder="Image" />
+      </div>
+      <br />
+      <div class="form-group">
+        <label><b>Video</b></label>
+        <input type="file" name="video" class="form-control" placeholder="Video" />
+      </div>
+      <br />
+      <div class="form-group">
+        <label><b>time</b></label>
+        <input type="time" name="time" class="form-control" placeholder="time" />
+      </div>
+      <br />
+
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+
+      <div class="container mt-3">
+        <div class="row">
+          <div class="col-sm-6">
+            <a class="btn btn-outline-success w-100" href="/register">Don't have account?</a>
+          </div>
+        </div>
+      </div>
+    </form>
+    <br />
+  </div>
+  {% for message in messages %}
+    <div class="alert alert-danger" role="alert">
+      <p class="text-red-500 text-xs italic">{{ message }}</p>
+    </div>
+  {% endfor %}
+{% endblock %}
