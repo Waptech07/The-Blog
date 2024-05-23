@@ -8,14 +8,21 @@ from .models import *
 # Create your views here.
 def index(request):
     title = "The Blog"
-    posts = Post.objects.all()
-    paginator = Paginator(posts, 10)
+    posts = Post.objects.all().order_by('-id')
+    paginator = Paginator(posts, 3)
     page_number = request.GET.get('page', 1)
     page = paginator.get_page(page_number)
     search_query = request.GET.get('search')
+    selected_categories = request.GET.getlist('category')  # Use getlist to get multiple selected categories
 
     if search_query:
         posts = Post.objects.filter(title__icontains=search_query).order_by('-id')
+        paginator = Paginator(posts, 10)
+        page_number = request.GET.get('page', 1)
+        page = paginator.get_page(page_number)
+
+    if selected_categories:
+        posts = Post.objects.filter(categories__name__in=selected_categories).order_by('-id')
         paginator = Paginator(posts, 10)
         page_number = request.GET.get('page', 1)
         page = paginator.get_page(page_number)
@@ -24,6 +31,8 @@ def index(request):
         next_url = f'?page={page.next_page_number()}'
         if search_query:
             next_url += f'&search={search_query}'
+        if selected_categories:
+            next_url += f'&category={",".join(selected_categories)}'
     else:
         next_url = ''
 
@@ -31,14 +40,13 @@ def index(request):
         previous_url = f'?page={page.previous_page_number()}'
         if search_query:
             previous_url += f'&search={search_query}'
+        if selected_categories:
+            previous_url += f'&category={",".join(selected_categories)}'
     else:
         previous_url = ''
 
-    # Pass only the posts for the current page to the template
     current_posts = page.object_list
-
-    # Retrieve distinct categories
-    categories = Post.objects.values_list('category', flat=True).distinct()
+    categories = Category.objects.all()
 
     return render(request, 'index.html', {'title': title, 'posts': current_posts, 'page': page, 'next_url': next_url, 'previous_url': previous_url, 'search_query': search_query, 'categories': categories})
 
@@ -124,10 +132,23 @@ def logout(request):
     return redirect("/login")
 
 
-def read(request, id, title):
+def read(request, id, slug):
+    post = get_object_or_404(Post, id=id, slug=slug)
+    comments = Comment.objects.filter(post=post).order_by('created_at')
 
-    post = get_object_or_404(Post, id=id, title=title)
-    return render(request, 'read_more.html', {'post': post})
+    if request.method == 'POST':
+        # Handle comment form submission
+        user = request.user
+        content = request.POST.get('comment_content')
+
+        # Create and save the comment
+        comment = Comment.objects.create(user=user, post=post, content=content)
+        comment.save()
+
+        # Redirect to the same post details page after submitting the comment
+        return redirect('read', id=post.id, title=post.title)
+
+    return render(request, 'read_more.html', {'post': post, 'comments': comments})
 
 def about(request):
     return render(request, 'about.html')
@@ -142,20 +163,47 @@ def newsletter(request):
 
 @login_required(login_url="login")
 def view_profile(request):
-    user = User.objects.all().values()
+    user = request.user
     return render(request, 'profile/view_profile.html', {"user": user})
 
 @login_required(login_url="login")
 def add_post(request):
-    post = Post.objects.all()
+    categories = Category.objects.all()
 
     if request.method == 'POST':
+        title = request.POST.get('title')
+        categories_names = request.POST.getlist('categories')  # Use getlist to get multiple selected categories
+        img = request.FILES.get('img')
+        video = request.FILES.get('video')
+        subheading = request.POST.get('subheading')
+        content = request.POST.get('content')
 
         # Create post
         post = Post.objects.create(
-            title = Post.title,
+            title=title,
+            img=img,
+            video=video,
+            user=request.user,
+            subheading=subheading,
+            content=content
         )
 
+        # Save post
         post.save()
 
-    return render(request, 'add_post.html', {'post' : post})
+        # Add categories to the post
+        post.categories.set(Category.objects.filter(name__in=categories_names))
+
+        # Add comments if provided
+        comments_content = request.POST.getlist('comments[]')
+        for comment_content in comments_content:
+            comment = Comment.objects.create(
+                user=request.user,
+                post=post,
+                content=comment_content
+            )
+            comment.save()
+
+        messages.success(request, "Post added successfully!")
+
+    return render(request, 'add_post.html', {'categories': categories})

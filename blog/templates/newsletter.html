@@ -1,0 +1,34 @@
+<!-- newsletter.html -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mx-auto mt-8">
+    <h1 class="text-3xl font-bold mb-4">Newsletter</h1>
+
+    <!-- Newsletter Subscription Form -->
+    <form method="post" action="" class="max-w-md mx-auto">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label for="email" class="block text-sm font-medium text-gray-700">Email:</label>
+        <input type="email" name="email" id="email" class="mt-1 p-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring focus:border-blue-300" required>
+      </div>
+
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 w-full">Subscribe</button>
+    </form>
+
+
+    <!-- Display recent posts -->
+    <h2 class="text-2xl font-bold mt-8 mb-4">Recent Posts</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {% for post in posts %}
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-xl font-bold">{{ post.title }}</h3>
+          <p class="text-gray-600">{{ post.date }}</p>
+          <p>{{ post.content }}</p>
+          <!-- Add other post details as needed -->
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
